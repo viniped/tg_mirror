@@ -209,15 +209,3 @@ Após ler esse tutorial e ainda tiver duvidas entre nesse grupo :
 https://t.me/+uxnB4OwMYPhiNWMx
 
 Esse script é disponibilizado como está e o desenvolvedor não se responsabiliza pelo mau uso do script 
-
-
-
-
-
- 
-
-
-
-
-
-
