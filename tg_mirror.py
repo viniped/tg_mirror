@@ -23,17 +23,37 @@ def authenticate():
     else:
         print("Usando sessão existente.")
 
+def get_channels():
+    with Client(session_name) as client:
+        channel_source = input("Forneça o @username ou ID do canal / grupo de origem: ")
+        channel_target = input("Forneça o @username ou ID do canal de destino: ")
+
+        channel_source = parse_channel_input(channel_source)
+        channel_target = parse_channel_input(channel_target)
+    return channel_source, channel_target        
+
+
 def parse_channel_input(channel_input: str):
     """Parse channel input to determine if it's an ID or username."""
     if channel_input.startswith("@"):
-        return channel_input  # it's a username
+        return channel_input  
     else:
         try:
-            return int(channel_input)  # try converting to int to see if it's an ID
+            return int(channel_input)  
         except ValueError:
             print("Entrada inválida. Por favor, forneça um ID ou nome de usuário válido.")
             exit()
 
+def get_user_choices():
+    print("Quais conteudos você deseja processar ?:\n")
+    options = ["Processar todos os Conteúdos" , "Fotos","Áudios", "Vídeos", "Arquivos", "Texto", "Sticker", "Animação - GIFs"]
+    for i, option in enumerate(options):
+        print(f"{i} - {option}")
+    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos : ").split(',')
+    choices = [int(choice.strip()) for choice in choices]
+    if 0 in choices:  # Se o usuário escolher a opção 0
+        choices = [1, 2, 3, 4, 5, 6, 7] 
+    return choices            
 
 def collect_video_metadata(directory: str) -> dict:
     videos_metadata = {}
@@ -52,7 +72,7 @@ def collect_video_metadata(directory: str) -> dict:
 
     return videos_metadata 
 
-def download_and_upload_media_from_channel():
+def download_and_upload_media_from_channel(choices, channel_source, channel_target):
     downloaded_media = []
 
     # Load task progress from Json file, if exists
@@ -64,19 +84,14 @@ def download_and_upload_media_from_channel():
     downloaded_ids = [item["id"] for item in downloaded_media]
 
     with Client(session_name) as client:
-        channel_source = input("Forneça o @user ou ID do canal que quer raspar: ")
-        channel_target = input("Forneça o @user ou ID do canal de destino: ")
-        # Use a função parse_channel_input para verificar o input
-        channel_source = parse_channel_input(channel_source)
-        channel_target = parse_channel_input(channel_target)
-   
+         
         all_messages = list(client.get_chat_history(channel_source))
         all_messages.reverse()
-        # Obter argumento 'duration' dos videos antes de upar os videos
+        # Get 'duration' argument of videos before upload
         all_video_metadata = collect_video_metadata("downloads")
         
         for count, message in enumerate(all_messages):
-            # Verificar se a mensagem já foi baixada
+            # Verify if media was downloaded before
             if message.id in downloaded_ids:
                 print(f"Mensagem {message.id} já foi baixada anteriormente.")
                 continue
@@ -84,21 +99,28 @@ def download_and_upload_media_from_channel():
             file_name = None
             caption_text = message.caption
 
-            # Processar e baixar os conteúdos / mensagens de texto
-            if message.photo:
+            # Process and download content 
+      
+            if 1 in choices and message.photo:
                 file_name = client.download_media(message.photo)
                 client.send_photo(channel_target, file_name, caption=caption_text)
-            elif message.audio:
+            if 2 in choices and message.audio:
                 file_name = client.download_media(message.audio)
                 client.send_audio(channel_target, file_name, caption=caption_text)
-            elif message.video:
+            if 3 in choices and message.video:
                 file_name = client.download_media(message.video)
                 client.send_video(channel_target, file_name, caption=caption_text)
-            elif message.document:
+            if 4 in choices and message.document:
                 file_name = client.download_media(message.document)
                 client.send_document(channel_target, file_name, caption=caption_text)
-            elif message.text:
-                client.send_message(channel_target, message.text)    
+            if 5 in choices and message.text:
+                client.send_message(channel_target, message.text)
+            if 6 in choices and message.sticker:
+                file_name = client.download_media(message.sticker)
+                client.send_sticker(channel_target, file_name)
+            if 7 in choices and message.animation:
+                file_name = client.download_media(message.animation)
+                client.send_animation(channel_target, file_name) 
                 
                 # Obter o argumento duração para os videos baixados antes do upload
                 if file_name:
@@ -109,15 +131,19 @@ def download_and_upload_media_from_channel():
             if file_name:
                 media_type = None
                 if message.photo:
-                    media_type = "photo"
+                    media_type = "photo"#1
                 elif message.audio:
-                    media_type = "audio"
+                    media_type = "audio"#2
                 elif message.video:
-                    media_type = "video"
+                    media_type = "video"#3
                 elif message.document:
-                    media_type = "document"
+                    media_type = "document"#4
                 elif message.text:
-                    media_type = text       
+                    media_type = "text"#5
+                elif message.sticker:
+                    media_type = "sticker"#6
+                elif message.animation:
+                    media_type = "animation"#7    
     
                 downloaded_media.append({
                     "id": message.id,
@@ -131,7 +157,7 @@ def download_and_upload_media_from_channel():
 
                 # Remover arquivo baixado após o upload e atualizar o JSON
                 os.remove(file_name)
-                print(f"Detalhes da mensagem {message.id} adicionados à lista e mídia enviada ao canal de destino.")
+                print(f"Detalhes da mensagem {message.id} adicionados à lista e mídia / arquivo enviada ao canal de destino.")
 
             # Intervalo de 10s para evitar abuso da API do Telegram
             time.sleep(10)
@@ -140,5 +166,7 @@ def download_and_upload_media_from_channel():
 
 if __name__ == "__main__":
     authenticate()
-    download_and_upload_media_from_channel()
+    channel_source, channel_target = get_channels()
+    choices = get_user_choices()
+    download_and_upload_media_from_channel(choices, channel_source, channel_target)
 
