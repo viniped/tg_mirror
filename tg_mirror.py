@@ -4,34 +4,31 @@ import json
 from pyrogram import Client
 from pathlib import Path
 import subprocess
+from utils import show_banner, cache_path, authenticate
+
+def get_channel_title(client, channel_id_or_username):
+    channel = client.get_chat(channel_id_or_username)
+    return channel.title
+
+def create_channel(client, title):
+    channel = client.create_channel(title=title)
+    return channel.id  
 
 """ Global """
-session_name = "user"
-
-def authenticate():
-    # Get credentialas from user
-    def get_credentials():
-        api_id = input("Digite seu API ID: ")
-        api_hash = input("Digite seu API Hash: ")
-        return api_id, api_hash
-
-    # if session file does not exists, obtain the credentials 
-    if not os.path.exists(f"{session_name}.session"):
-        api_id, api_hash = get_credentials()
-        with Client(session_name, api_id, api_hash) as app:
-            print("Você está autenticado!")
-    else:
-        print("Usando sessão existente.")
+session_name = "user"        
 
 def get_channels():
     with Client(session_name) as client:
         channel_source = input("Forneça o @username ou ID do canal / grupo de origem: ")
         channel_target = input("Forneça o @username ou ID do canal de destino: ")
 
-        channel_source = parse_channel_input(channel_source)
-        channel_target = parse_channel_input(channel_target)
-    return channel_source, channel_target        
+        # Se o canal de origem foi especificado e o de destino foi deixado em branco
+        if channel_source and not channel_target:
+            source_title = get_channel_title(client, channel_source)
+            channel_target_name = f"{source_title} - Cópia"
+            channel_target = create_channel(client, channel_target_name)
 
+    return channel_source, channel_target     
 
 def parse_channel_input(channel_input: str):
     """Parse channel input to determine if it's an ID or username."""
@@ -49,7 +46,7 @@ def get_user_choices():
     options = ["Processar todos os Conteúdos" , "Fotos","Áudios", "Vídeos", "Arquivos", "Texto", "Sticker", "Animação - GIFs"]
     for i, option in enumerate(options):
         print(f"{i} - {option}")
-    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos : ").split(',')
+    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos > : ").split(',')
     choices = [int(choice.strip()) for choice in choices]
     if 0 in choices:  # Se o usuário escolher a opção 0
         choices = [1, 2, 3, 4, 5, 6, 7] 
@@ -70,7 +67,7 @@ def collect_video_metadata(directory: str) -> dict:
                 except json.JSONDecodeError:
                     pass
 
-    return videos_metadata 
+    return videos_metadata
 
 def download_and_upload_media_from_channel(choices, channel_source, channel_target):
     downloaded_media = []
@@ -88,11 +85,12 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
         all_messages = list(client.get_chat_history(channel_source))
         all_messages.reverse()
         # Get 'duration' argument of videos before upload
-        all_video_metadata = collect_video_metadata("downloads")
+        all_video_metadata = collect_video_metadata('downloads')
         
         for count, message in enumerate(all_messages):
             # Verify if media was downloaded before
             if message.id in downloaded_ids:
+                os.system('clear || cls')
                 print(f"Mensagem {message.id} já foi baixada anteriormente.")
                 continue
 
@@ -154,10 +152,12 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
                 # Salvar detalhes da mídia baixada em um arquivo JSON após o upload
                 with open("downloaded_media.json", "w") as json_file:
                     json.dump(downloaded_media, json_file, indent=4)
-
+               
                 # Remover arquivo baixado após o upload e atualizar o JSON
                 os.remove(file_name)
+                os.system('clear || cls')
                 print(f"Detalhes da mensagem {message.id} adicionados à lista e mídia / arquivo enviada ao canal de destino.")
+                
 
             # Intervalo de 10s para evitar abuso da API do Telegram
             time.sleep(10)
@@ -165,6 +165,8 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
         print("Tarefa concluida e log salvo no arquivo JSON.")
 
 if __name__ == "__main__":
+    show_banner()
+    cache_path()
     authenticate()
     channel_source, channel_target = get_channels()
     choices = get_user_choices()
