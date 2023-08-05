@@ -1,2 +1,4 @@
 pyrogram
-json
+tgcrypto
+pyfiglet
+colorama
