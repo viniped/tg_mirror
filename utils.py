@@ -1,4 +1,5 @@
 import os
+from pyrogram import Client
 from colorama import Fore
 import pyfiglet
 import random
