@@ -9,7 +9,7 @@ from utils import Banner, show_banner, cache_path, authenticate
 
 """ Global """
 session_name = "user"
-video_path = 'downloads'
+#video_path = 'downloads'
 
 def get_channels():
     with Client(session_name) as client:
@@ -17,8 +17,8 @@ def get_channels():
         channel_target = input("Forneça o @username ou ID do canal de destino: ")
         channel_source = parse_channel_input(channel_source)
         channel_target = parse_channel_input(channel_target)
-        
-    return  channel_source, channel_target
+        chat_info = client.get_chat(channel_source)
+        return channel_source, channel_target, chat_info.title
 
 def parse_channel_input(channel_input: str):
     """Parse channel input to determine if it's an ID or username."""
@@ -75,16 +75,20 @@ def collect_video_duration(video_path: str) -> int:
         print(f"Erro ao coletar duração do vídeo: {e}")
         return 0
 
-def get_json_filename(channel_source, channel_target):
-    return f"downloaded_media_{channel_source}_{channel_target}.json"
+def get_json_filename(channel_source, channel_target, chat_title):
+    return f"downloaded_media_{chat_title}_{channel_source}_{channel_target}.json"
 
-def download_and_upload_media_from_channel(choices, channel_source, channel_target):
+def get_json_filepath(channel_source, channel_target, chat_title):
+    filename = f"downloaded_media_{chat_title}_{channel_source}_{channel_target}.json"
+    return os.path.join('download_tasks', filename)
+
+def download_and_upload_media_from_channel(choices, channel_source, channel_target, chat_title):
     downloaded_media = []
     last_processed_id = 0
-    json_filename = get_json_filename( channel_source, channel_target)
+    json_filepath = get_json_filepath(channel_source, channel_target, chat_title)
 
-    if os.path.exists(json_filename):
-        with open(json_filename, "r") as json_file:
+    if os.path.exists(json_filepath):
+        with open(json_filepath, "r") as json_file:
             data = json.load(json_file)
             last_processed_id = data["last_processed_id"] if "last_processed_id" in data else 0
             print(f"Retomando do ID da próxima mensagem após a última processada: {last_processed_id + 1}")
@@ -119,7 +123,6 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
                     if elapsed_time > 0.5:
                         speed_bps = (current - bytes_downloaded) / elapsed_time  # bytes por segundo
                         speed_mbps = (speed_bps * 8) / (10**6)  # megabits por segundo
-
                         bar.set_description(f"{operation} at {speed_mbps:.2f} Mbps")
                         bytes_downloaded = current
                         last_update_time = current_time
@@ -136,18 +139,15 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
                 #os.system('clear || cls')
                 file_size = message.audio.file_size
                 bar = tqdm(total=file_size, desc="Downloading", leave=False)                         
-                #file_name = client.download_media(message.audio, progress=progress)
                 file_name = client.download_media(message.audio, progress=lambda c, t: progress(c, t, "Downloading"))
                 file_size = os.path.getsize(file_name)
                 bar = tqdm(total=file_size, desc="Uploading ...", leave=False)
-                #client.send_audio(channel_target, file_name, caption=caption_text, progress=progress)
                 client.send_audio(channel_target, file_name, caption=caption_text, progress=lambda c, t: progress(c, t, "Uploading"))
   
             if 3 in choices and message.video:
                 #os.system('clear || cls')
                 file_size = message.video.file_size
                 bar = tqdm(total=file_size, desc="Downloading",unit = 'B', leave=False)
-                #file_name = client.download_media(message.video, progress=progress)
                 file_name = client.download_media(message.video, progress=lambda c, t: progress(c, t, "Downloading"))
                 duration = collect_video_duration(file_name)
                 thumbnail_path = extract_thumbnail(file_name)
@@ -155,14 +155,13 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
                 if thumbnail_path:
                     file_size = os.path.getsize(file_name)
                     bar = tqdm(total=file_size, desc="Uploading ...", leave=False)
-                    #client.send_video(channel_target, file_name, caption=caption_text, duration=duration, thumb=thumbnail_path, progress=progress)
                     client.send_video(channel_target, file_name, caption=caption_text, duration=duration, thumb=thumbnail_path, progress=lambda c, t: progress(c, t, "Uploading"))
 
                     os.remove(thumbnail_path)  # Remove thumbnail file after uploads
                 else:
                     file_size = os.path.getsize(file_name)
                     bar = tqdm(total=file_size, desc="Uploading ...", unit='B', leave=False)
-                    client.send_video(channel_target, file_name, caption=caption_text, duration=duration, progress=progress)
+                    client.send_video(channel_target, file_name, caption = 'O melhor vip de famosas é aqui @freesemjulgamento', duration=duration, progress=progress)
                
             if 4 in choices and message.document:
                 #os.system('clear || cls')
@@ -180,17 +179,14 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
             if 7 in choices and message.animation:
                 file_name = client.download_media(message.animation)
                 client.send_animation(channel_target, file_name)
-
-            if file_name:
+          
+            if file_name:                            
                 last_processed_id = message.id
-                with open(json_filename, "w") as json_file:
+                with open(json_filepath, "w") as json_file:
                     json.dump({"last_processed_id": last_processed_id}, json_file)
                     os.system('clear || cls')
-                    print(f"Detalhes da mensagem {message.id} adicionados à lista e mídia / arquivo enviada ao canal de destino.")
-              
-                # Remova o arquivo baixado após o upload
-                os.remove(file_name)  
-
+                    print(f"Detalhes da mensagem {message.id} adicionados à lista e mídia / arquivo enviada ao canal de destino.")        
+                os.remove(file_name)     
             # Intervalo de 5s para evitar abuso da API do Telegram
             time.sleep(5)
         print("Tarefa concluida e log salvo no arquivo JSON.")
@@ -199,6 +195,6 @@ if __name__ == "__main__":
     show_banner()
     cache_path()
     authenticate()
-    channel_source, channel_target = get_channels()
+    channel_source, channel_target, chat_title = get_channels()
     choices = get_user_choices()
-    download_and_upload_media_from_channel(choices, channel_source, channel_target)
+    download_and_upload_media_from_channel(choices, channel_source, channel_target, chat_title)
