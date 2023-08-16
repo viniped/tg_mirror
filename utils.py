@@ -24,15 +24,16 @@ class Banner:
         print(f'{random.choice(colors)}{banner}{self.n}')
         print(f'{self.r}  Version: v0.0.2 https://github.com/viniped \n{self.n}')
 
-
 def show_banner():
     banner = Banner('TG - Mirror')
     banner.print_banner()
 
-
 def cache_path():
-    if not os.path.exists('downloads'):
-        os.makedirs('downloads')
+    directories = ['downloads', 'download_tasks','forward_task']
+
+    for dir_name in directories:
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
 
 def authenticate():
     # Get credentialas from user
