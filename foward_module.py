@@ -39,77 +39,91 @@ def get_user_choices():
     return choices
 
 def extract_links_from_buttons(reply_markup):
-    if not reply_markup:
+    if not reply_markup or not hasattr(reply_markup, 'inline_keyboard') or not reply_markup.inline_keyboard:
         return ''
 
     link_texts = []
     for row in reply_markup.inline_keyboard:
         for button in row:
             link_texts.append(f"{button.text} ({button.url})")
-    
     return ' '.join(link_texts)
+
+def extract_text_links_from_caption(message):
+    if not hasattr(message, 'caption_entities') or not message.caption_entities:
+        return ''
+
+    links = []
+    for entity in message.caption_entities:
+        if entity.type == "text_link":
+            links.append(entity.url)
+    return ' '.join(links)
+
+def get_custom_caption():
+    caption = input("Digite a legenda personalizada (deixe em branco para manter a legenda original): ")
+    return caption #Ask user for a custom caption and return it
+
+def get_caption(message, custom_caption=None):
+    caption_texts = []
+    
+    if custom_caption:
+        caption_texts.append(custom_caption)
+  
+    if message.caption:
+        caption_texts.append(message.caption.markdown) # adicionar legenda tradicional ao texto final
+    
+    links_from_buttons = extract_links_from_buttons(message.reply_markup)
+    if links_from_buttons:
+        caption_texts.append(links_from_buttons)# Adicionar links dos botões
+    
+    links_from_caption = extract_text_links_from_caption(message)
+    if links_from_caption:
+        caption_texts.append(links_from_caption)# legenda com hiper-link (text_link), adicionamos ao texto final
+    
+    if message.text and not links_from_buttons and not links_from_caption:
+        caption_texts.append(message.text)# mensagem puramente textual
+    return ' '.join(caption_texts).strip()
 
 def generate_progress_filename(channel_source, channel_target, chat_title):
     filename = f"{chat_title}_{channel_source}_{channel_target}.json"
     return os.path.join("forward_task", filename)
 
-def get_custom_caption():
-    """Ask user for a custom caption and return it."""
-    caption = input("Digite a legenda personalizada (deixe em branco para manter a legenda original): ")
-    return caption
-
 def save_progress(filename, last_message_id):
-    """Salva o ID da última mensagem processada no arquivo de progresso."""
     with open(filename, 'w') as file:
         json.dump({'last_message_id': last_message_id}, file)
 
 def get_previous_progress(filename):
-    
     if os.path.exists(filename):
         with open(filename, 'r') as file:
             data = json.load(file)
             return data.get('last_message_id')
     return None        
-    
-"""def save_progress(filename, last_message_id):
-    with open(filename, 'w') as file:
-        json.dump({'last_message_id': last_message_id}, file)
-
-def get_previous_progress(filename):
-    if os.path.exists(filename):
-        with open(filename, 'r') as file:
-            data = json.load(file)
-            return data.get('last_message_id')
-    return None"""
 
 def forward_message(client, message, channel_target, progress_file, custom_caption):
     try:
         links_from_buttons = extract_links_from_buttons(message.reply_markup)
-        caption_with_links = custom_caption if custom_caption else (message.caption or '') + ' ' + links_from_buttons
-        #caption_with_links = (message.caption or '') + ' ' + links_from_buttons
+        final_caption = get_caption(message, custom_caption)
 
         if message.photo:
-            client.send_photo(channel_target, message.photo.file_id, caption=caption_with_links.strip())
+            client.send_photo(channel_target, message.photo.file_id, caption=final_caption)
         elif message.audio:
-            client.send_audio(channel_target, message.audio.file_id, caption=caption_with_links.strip())
+            client.send_audio(channel_target, message.audio.file_id, caption=final_caption)
         elif message.video:
-            client.send_video(channel_target, message.video.file_id, caption=caption_with_links.strip())
+            client.send_video(channel_target, message.video.file_id, caption=final_caption)
         elif message.document:
-            client.send_document(channel_target, message.document.file_id, caption=caption_with_links.strip())
+            client.send_document(channel_target, message.document.file_id, caption=final_caption)
         elif message.text:
             text_with_links = message.text + ' ' + links_from_buttons
             client.send_message(channel_target, text_with_links.strip())
         elif message.sticker:
             client.send_sticker(channel_target, message.sticker.file_id)
         elif message.animation:
-            client.send_animation(channel_target, message.animation.file_id, caption=caption_with_links.strip())
-   
-        # Atualizando o 'task - progress' após encaminhar
+            client.send_animation(channel_target, message.animation.file_id, caption=final_caption)
+          
         save_progress(progress_file, message.id)
         os.system('clear || cls')
         print(f"Message {message.id} forwarded")
     except Exception as e:
-        print(f"Erro ao reenviar mensagem: {e}")
+        print(f"Erro ao reenviar mensagem: {e}")  # Atualizando o 'task - progress' após encaminhar
 
 def forward_messages_from_channel(choices, channel_source, channel_target, chat_title):
     custom_caption = get_custom_caption()  # Pegue a legenda personalizada do usuário
@@ -133,7 +147,6 @@ def forward_messages_from_channel(choices, channel_source, channel_target, chat_
                (7 in choices and message.animation):
                 forward_message(client, message, channel_target, progress_file, custom_caption)
                 time.sleep(10)
-
         print("Task complete sucessfully")        
 
 if __name__ == "__main__":
@@ -143,4 +156,3 @@ if __name__ == "__main__":
     channel_source, channel_target, chat_title = get_channels()
     choices = get_user_choices()
     forward_messages_from_channel(choices, channel_source, channel_target, chat_title)
-    
