@@ -161,7 +161,7 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
                 else:
                     file_size = os.path.getsize(file_name)
                     bar = tqdm(total=file_size, desc="Uploading ...", unit='B', leave=False)
-                    client.send_video(channel_target, file_name, caption = 'O melhor vip de famosas é aqui @freesemjulgamento', duration=duration, progress=progress)
+                    client.send_video(channel_target, file_name, caption =caption_text, duration=duration, progress=progress)
                
             if 4 in choices and message.document:
                 #os.system('clear || cls')
