@@ -32,7 +32,7 @@ def get_user_choices():
     options = ["Processar todos os Conteúdos", "Fotos", "Áudios", "Vídeos", "Arquivos", "Texto", "Sticker", "Animação - GIFs"]
     for i, option in enumerate(options):
         print(f"{i} - {option}")
-    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos : ").split(',')
+    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos > : ").split(',')
     choices = [int(choice.strip()) for choice in choices]
     if 0 in choices:
         choices = [1, 2, 3, 4, 5, 6, 7]
@@ -83,9 +83,17 @@ def get_caption(message, custom_caption=None):
         caption_texts.append(message.text)# mensagem puramente textual
     return ' '.join(caption_texts).strip()
 
+def clean_filename(filename):
+    unsupported_chars = '<>:"/\\|?#{}[]*'  
+    for char in unsupported_chars:
+        filename = filename.replace(char, '_')
+    filename = filename.strip().strip('.')
+    return filename    
+
 def generate_progress_filename(channel_source, channel_target, chat_title):
     filename = f"{chat_title}_{channel_source}_{channel_target}.json"
-    return os.path.join("forward_task", filename)
+    cleaned_filename = clean_filename(filename)
+    return os.path.join("forward_task", cleaned_filename)
 
 def save_progress(filename, last_message_id):
     with open(filename, 'w') as file:
