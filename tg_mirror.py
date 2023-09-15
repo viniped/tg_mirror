@@ -9,7 +9,6 @@ from utils import Banner, show_banner, cache_path, authenticate
 
 """ Global """
 session_name = "user"
-#video_path = 'downloads'
 
 def get_channels():
     with Client(session_name) as client:
@@ -36,7 +35,7 @@ def get_user_choices():
     options = ["Processar todos os Conteúdos", "Fotos", "Áudios", "Vídeos", "Arquivos", "Texto", "Sticker", "Animação - GIFs"]
     for i, option in enumerate(options):
         print(f"{i} - {option}")
-    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos : ").split(',')
+    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos >  : ").split(',')
     choices = [int(choice.strip()) for choice in choices]
     if 0 in choices:
         choices = [1, 2, 3, 4, 5, 6, 7]
@@ -73,14 +72,22 @@ def collect_video_duration(video_path: str) -> int:
         return int(float(duration))
     except Exception as e:
         print(f"Erro ao coletar duração do vídeo: {e}")
-        return 0
+        return 0  
+
+def clean_filename(filename):
+    unsupported_chars = '<>:"/\\|?#{}[]*'  
+    for char in unsupported_chars:
+        filename = filename.replace(char, '_')
+    filename = filename.strip().strip('.')
+    return filename    
 
 def get_json_filename(channel_source, channel_target, chat_title):
     return f"downloaded_media_{chat_title}_{channel_source}_{channel_target}.json"
 
 def get_json_filepath(channel_source, channel_target, chat_title):
     filename = f"downloaded_media_{chat_title}_{channel_source}_{channel_target}.json"
-    return os.path.join('download_tasks', filename)
+    cleaned_filename = clean_filename(filename)
+    return os.path.join('download_tasks', cleaned_filename)
 
 def download_and_upload_media_from_channel(choices, channel_source, channel_target, chat_title):
     downloaded_media = []
