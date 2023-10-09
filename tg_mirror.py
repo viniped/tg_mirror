@@ -6,9 +6,23 @@ from pathlib import Path
 import subprocess
 from tqdm import tqdm
 from utils import Banner, show_banner, cache_path, authenticate
+import re
 
 """ Global """
 session_name = "user"
+video_path = 'downloads'
+
+def limpar_nome_arquivo(nome_arquivo):
+    nome_limpo = re.sub(r'[^a-zA-Z0-9]', '_', nome_arquivo)    
+    chars_invalidos = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+    for char in chars_invalidos:
+        nome_limpo = nome_limpo.replace(char, '_')
+    return nome_limpo
+
+def get_cleaned_file_path(media, directory):
+    extension = media.file_name.split('.')[-1] if media.file_name and '.' in media.file_name else 'unknown'
+    clean_name = limpar_nome_arquivo(media.file_name or f"{media.file_id}.{extension}")
+    return os.path.join(directory, clean_name)
 
 def get_channels():
     with Client(session_name) as client:
@@ -35,7 +49,7 @@ def get_user_choices():
     options = ["Processar todos os Conteúdos", "Fotos", "Áudios", "Vídeos", "Arquivos", "Texto", "Sticker", "Animação - GIFs"]
     for i, option in enumerate(options):
         print(f"{i} - {option}")
-    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos >  : ").split(',')
+    choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos : ").split(',')
     choices = [int(choice.strip()) for choice in choices]
     if 0 in choices:
         choices = [1, 2, 3, 4, 5, 6, 7]
@@ -47,6 +61,9 @@ def extract_thumbnail(video_path: str) -> str:
     # Extract frame from 00:00:01
     thumbnail_command = [
         'ffmpeg',
+        '-v', 'quiet',    
+        '-stats',        
+        '-y',
         '-i', video_path,
         '-ss', '00:00:01',
         '-vframes', '1',
@@ -72,7 +89,7 @@ def collect_video_duration(video_path: str) -> int:
         return int(float(duration))
     except Exception as e:
         print(f"Erro ao coletar duração do vídeo: {e}")
-        return 0  
+        return 0
 
 def clean_filename(filename):
     unsupported_chars = '<>:"/\\|?#{}[]*'  
@@ -81,7 +98,7 @@ def clean_filename(filename):
     filename = filename.strip().strip('.')
     return filename    
 
-def get_json_filename(channel_source, channel_target, chat_title):
+def get_json_filepath(channel_source, channel_target, chat_title):
     return f"downloaded_media_{chat_title}_{channel_source}_{channel_target}.json"
 
 def get_json_filepath(channel_source, channel_target, chat_title):
@@ -130,72 +147,71 @@ def download_and_upload_media_from_channel(choices, channel_source, channel_targ
                     if elapsed_time > 0.5:
                         speed_bps = (current - bytes_downloaded) / elapsed_time  # bytes por segundo
                         speed_mbps = (speed_bps * 8) / (10**6)  # megabits por segundo
+
                         bar.set_description(f"{operation} at {speed_mbps:.2f} Mbps")
                         bytes_downloaded = current
                         last_update_time = current_time
                 bar.n = current
                 bar.refresh()
-           
+    
             if 1 in choices and message.photo:
                 file_size = message.photo.file_size
                 bar = tqdm(total=file_size, desc="Downloading", leave=False)
                 file_name = client.download_media(message.photo, progress=progress)
-                client.send_photo(channel_target, file_name, caption=caption_text, progress=progress)        
-           
+                client.download_media(message.photo, file_name=file_name, progress=lambda c, t: progress(c, t, "Downloading"))
+                client.send_photo(channel_target, file_name, caption=caption_text, progress=lambda c, t: progress(c, t, "Uploading"))
+
             if 2 in choices and message.audio:
-                #os.system('clear || cls')
                 file_size = message.audio.file_size
-                bar = tqdm(total=file_size, desc="Downloading", leave=False)                         
-                file_name = client.download_media(message.audio, progress=lambda c, t: progress(c, t, "Downloading"))
-                file_size = os.path.getsize(file_name)
-                bar = tqdm(total=file_size, desc="Uploading ...", leave=False)
+                bar = tqdm(total=file_size, desc="Downloading", leave=False)
+                file_name = get_cleaned_file_path(message.audio, video_path)
+                client.download_media(message.audio, file_name=file_name, progress=lambda c, t: progress(c, t, "Downloading"))
                 client.send_audio(channel_target, file_name, caption=caption_text, progress=lambda c, t: progress(c, t, "Uploading"))
-  
+
             if 3 in choices and message.video:
-                #os.system('clear || cls')
                 file_size = message.video.file_size
-                bar = tqdm(total=file_size, desc="Downloading",unit = 'B', leave=False)
-                file_name = client.download_media(message.video, progress=lambda c, t: progress(c, t, "Downloading"))
+                bar = tqdm(total=file_size, desc="Downloading", leave=False)
+                file_name = get_cleaned_file_path(message.video, video_path)
+                client.download_media(message.video, file_name=file_name, progress=lambda c, t: progress(c, t, "Downloading"))
                 duration = collect_video_duration(file_name)
                 thumbnail_path = extract_thumbnail(file_name)
-                
-                if thumbnail_path:
-                    file_size = os.path.getsize(file_name)
-                    bar = tqdm(total=file_size, desc="Uploading ...", leave=False)
-                    client.send_video(channel_target, file_name, caption=caption_text, duration=duration, thumb=thumbnail_path, progress=lambda c, t: progress(c, t, "Uploading"))
 
-                    os.remove(thumbnail_path)  # Remove thumbnail file after uploads
+                if thumbnail_path:
+                    bar = tqdm(total=file_size, desc="Uploading ...", leave=False)                    
+                    client.send_video(channel_target, file_name, caption=caption_text,duration=duration, thumb=thumbnail_path, progress=lambda c, t: progress(c, t, "Uploading"))
+                    os.remove(thumbnail_path)
                 else:
-                    file_size = os.path.getsize(file_name)
-                    bar = tqdm(total=file_size, desc="Uploading ...", unit='B', leave=False)
-                    client.send_video(channel_target, file_name, caption =caption_text, duration=duration, progress=progress)
-               
+                    bar = tqdm(total=file_size, desc="Uploading ...", leave=False)
+                    client.send_video(channel_target, file_name, caption=caption_text, duration=duration, progress=progress)
+
             if 4 in choices and message.document:
-                #os.system('clear || cls')
                 file_size = message.document.file_size
                 bar = tqdm(total=file_size, desc="Downloading", leave=False)
-                file_name = client.download_media(message.document, progress=progress)
+                file_name = get_cleaned_file_path(message.document, video_path)
+                client.download_media(message.document, file_name=file_name, progress=progress)
                 client.send_document(channel_target, file_name, caption=caption_text, progress=progress)
-                
-            if 5 in choices and message.text:                
+
+            if 5 in choices and message.text:
                 client.send_message(channel_target, message.text)
-                
+
             if 6 in choices and message.sticker:
-                file_name = client.download_media(message.sticker)
+                file_name = get_cleaned_file_path(message.sticker, video_path)
+                client.download_media(message.sticker, file_name=file_name)
                 client.send_sticker(channel_target, file_name)
+
             if 7 in choices and message.animation:
-                file_name = client.download_media(message.animation)
+                file_name = get_cleaned_file_path(message.animation, video_path)
+                client.download_media(message.animation, file_name=file_name)
                 client.send_animation(channel_target, file_name)
-          
             if file_name:                            
                 last_processed_id = message.id
                 with open(json_filepath, "w") as json_file:
                     json.dump({"last_processed_id": last_processed_id}, json_file)
                     os.system('clear || cls')
                     print(f"Detalhes da mensagem {message.id} adicionados à lista e mídia / arquivo enviada ao canal de destino.")        
-                os.remove(file_name)     
-            # Intervalo de 5s para evitar abuso da API do Telegram
-            time.sleep(5)
+                os.remove(file_name)
+            # Intervalo de 10s para evitar abuso da API do Telegram
+            time.sleep(10)
         print("Tarefa concluida e log salvo no arquivo JSON.")
 
 if __name__ == "__main__":
