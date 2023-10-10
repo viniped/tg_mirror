@@ -3,3 +3,4 @@ tgcrypto
 pyfiglet
 colorama
 tqdm
+shutil
