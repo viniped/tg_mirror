@@ -35,7 +35,7 @@ def get_cleaned_file_path(media, directory, chat_title, caption=None):
 
 def get_channel():
     with Client(session_name) as client:
-        channel_source = input("Forneça o @username ou ID do canal / grupo de origem: ")
+        channel_source = input("Forneça o @username ou ID do canal / grupo que deseja baixar os conteúdos ")
         channel_source = parse_channel_input(channel_source)
         chat_info = client.get_chat(channel_source)
         return channel_source, chat_info.title
@@ -52,13 +52,13 @@ def parse_channel_input(channel_input: str):
 
 def get_user_choices():
     print("Quais conteudos você deseja processar?:\n")
-    options = ["Processar todos os Conteúdos", "Fotos", "Áudios", "Vídeos", "Arquivos", "Texto", "Sticker", "Animação - GIFs"]
+    options = ["Processar todos os Conteúdos", "Fotos", "Áudios", "Vídeos", "Arquivos"]
     for i, option in enumerate(options):
         print(f"{i} - {option}")
     choices = input("\nInforme os conteúdos que deseja procesar separados por vírgula (ex: 1,3) < 0 para processar todos : ").split(',')
     choices = [int(choice.strip()) for choice in choices]
     if 0 in choices:
-        choices = [1, 2, 3, 4, 5, 6, 7]
+        choices = [1, 2, 3, 4]
     return choices
 
 def download_progress(current, total):
@@ -98,8 +98,7 @@ def download_media_from_channel(choices, channel_source, chat_title):
                 bar = tqdm(total=message.photo.file_size, desc="Downloading Photo", leave=False)
                 file_name = client.download_media(message.photo, progress=download_progress)
                 bar.close()
-
-                # Após baixar a foto, mova-a para a pasta do canal
+               
                 if file_name:
                     destination_directory = os.path.join(video_path, limpar_nome_arquivo(chat_title))
                     destination_path = os.path.join(destination_directory, os.path.basename(file_name))
@@ -129,18 +128,6 @@ def download_media_from_channel(choices, channel_source, chat_title):
                 client.download_media(message.document, file_name=file_name, progress=download_progress)
                 bar.close()
 
-            if 6 in choices and message.sticker:
-                bar = tqdm(total=message.sticker.file_size, desc="Downloading Sticker", leave=False)
-                file_name = get_cleaned_file_path(message.sticker, video_path, chat_title)
-                client.download_media(message.sticker, file_name=file_name, progress=download_progress)
-                bar.close()
-
-            if 7 in choices and message.animation:
-                bar = tqdm(total=message.animation.file_size, desc="Downloading Animation", leave=False)
-                file_name = get_cleaned_file_path(message.animation, video_path, chat_title)
-                client.download_media(message.animation, file_name=file_name, progress=download_progress)
-                bar.close()
-            
             if file_name:
                 os.system('clear || cls')
                 print(f"\nDetalhes da mensagem {message.id} baixados e salvos em {file_name}.")
