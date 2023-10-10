@@ -1,4 +1,5 @@
 import os
+import re
 from pyrogram import Client
 from colorama import Fore
 import pyfiglet
@@ -6,6 +7,13 @@ import random
 
 """ Global """
 session_name = "user"
+
+def limpar_nome_arquivo(nome_arquivo):
+    nome_limpo = re.sub(r'[^a-zA-Z0-9]', '_', nome_arquivo)
+    chars_invalidos = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+    for char in chars_invalidos:
+        nome_limpo = nome_limpo.replace(char, '_')
+    return nome_limpo
 
 class Banner:
     def __init__(self, banner):
@@ -29,7 +37,7 @@ def show_banner():
     banner.print_banner()
 
 def cache_path():
-    directories = ['downloads', 'download_tasks','forward_task']
+    directories = ['downloads', 'download_tasks','forward_task','chat_download_task']
 
     for dir_name in directories:
         if not os.path.exists(dir_name):
@@ -49,3 +57,14 @@ def authenticate():
             print("Você está autenticado!")
     else:
         print("Usando sessão existente.")
+
+def rename_files(directory, chat_title):
+    
+    chat_directory = os.path.join(directory, limpar_nome_arquivo(chat_title))
+    files = [f for f in os.listdir(chat_directory) if os.path.isfile(os.path.join(chat_directory, f))]      
+    files.sort(key=lambda x: os.path.getctime(os.path.join(chat_directory, x)))    
+    for idx, filename in enumerate(files, start=1):
+        # Substituir underscores por espaços
+        cleaned_name = filename.replace("_", " ")
+        new_name = f"{idx:03}_{cleaned_name}"
+        os.rename(os.path.join(chat_directory, filename), os.path.join(chat_directory, new_name))
