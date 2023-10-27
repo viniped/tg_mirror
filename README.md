@@ -1,16 +1,16 @@
-##TG MIRROR 
+## TG MIRROR 
 
-#Introdução
+# Introdução
 
 Um script simples e e intuitivo para salvar seus conteúdos favoritos do Telegram 
 
-#Pré requisitos 
+# Pré requisitos 
 
 Python 3.10.xx + 
 ffmpeg
 git
 
-#Configuração
+# Configuração
 
 Para uma melhor experiencia recomendo instalar os pré requisitos usando um gerenciador de pacotes. Para essa instalação vamos usar o chocolatey.
 
@@ -36,7 +36,7 @@ python e ffmpeg para isso no mesmo no mesmo terminal aberto cole o seguinte coma
 
 e aguarde a instalação.
 
-#Baixando o script para a sua máquina e instalando as dependências
+# Baixando o script para a sua máquina e instalando as dependências
 
 Com o git, python e ffmpeg instalados clone o repositorio do script para a sua máquina 
 
@@ -74,7 +74,7 @@ Caso tenha alguma dúvida entre nesse grupo :
 
 	https://t.me/+uxnB4OwMYPhiNWMx
 	
-#Aviso Legal:
+# Aviso Legal:
 
 O script TG_MIRROR é fornecido "como está" e sem garantias. É sua responsabilidade garantir que você tenha os direitos e permissões necessários para realizar as operações propostas. O autor do script não assume nenhuma responsabilidade por qualquer uso indevido ou danos causados pelo uso deste script.	 		
 		
