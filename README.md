@@ -7,7 +7,9 @@ Um script simples e e intuitivo para salvar seus conteúdos favoritos do Telegra
 ## Pré requisitos 
 
 Python 3.10.xx + 
+
 ffmpeg
+
 git
 
 ## Configuração
