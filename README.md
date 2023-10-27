@@ -32,7 +32,7 @@ Assim como explicado na [página de instalação](https://chocolatey.org/install
 Após a instalação do chocolatey você está pronto para preparar o ambiente para a instalção do 
 python e ffmpeg para isso no mesmo no mesmo terminal aberto cole o seguinte comando:
 
-'choco install git ffmpeg python --version 3.11.3 -y'
+	choco install git ffmpeg python --version 3.11.3 -y
 
 e aguarde a instalação.
 
@@ -42,21 +42,21 @@ Com o git, python e ffmpeg instalados clone o repositorio do script para a sua m
 
 para isso abra o prompt de comando do seu computador como administrador e redirecione para a area de trabalho com o seguinte comando:
 
-	'cd Desktop'
+	cd Desktop
 	
 Após isso clone o repositorio do script:
 
-	'git clone https://github.com/viniped/tg_mirror.git'
+	git clone https://github.com/viniped/tg_mirror.git
 	
 Com isso será criado na sua Área de Trabalho uma pasta tg_mirror
 
 Acesse ela pelo terminal com o comando: 
 
-	'cd tg_mirror'
+	cd tg_mirror
 
 Após isso vamos instalar as dependencias com o comando:
 
-	'pip install -r requirements.txt --upgrade'
+	pip install -r requirements.txt --upgrade
 
 ## Usando o script 
 
