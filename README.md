@@ -27,7 +27,7 @@ Com o Chocolatey, você pode pular esses passos e simplesmente digitar um comand
 
 Assim como explicado na [página de instalação](https://chocolatey.org/install) do chocolatey, abra o PowerShell do windows com privilégio de administrador e execute o comando abaixo:
 
-`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
+	Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
 Após a instalação do chocolatey você está pronto para preparar o ambiente para a instalção do 
 python e ffmpeg para isso no mesmo no mesmo terminal aberto cole o seguinte comando:
