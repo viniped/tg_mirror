@@ -1,211 +1,84 @@
-TG_mirror
+##TG MIRROR 
 
+#Introdução
 
-Introdução
+Um script simples e e intuitivo para salvar seus conteúdos favoritos do Telegram 
 
-Este script tem como finalidade raspar (ou extrair) mídias de um canal do Telegram e enviar essas mídias para outro canal ou grupo. Além disso, ele pode coletar e gerenciar metadados dos vídeos antes de enviá-los para o canal de destino. Esse script é util para usuários interessados em fazer cópias de conteúdo protegido de canais do telegram.
-Atenção esse script serve apenas para salvar conteudo protegido
+#Pré requisitos 
 
-Funcionalidades
-Autenticação no Telegram:
+Python 3.10.xx + 
+ffmpeg
+git
 
-O script autentica o usuário no Telegram usando uma API ID e API Hash.
-Os detalhes da sessão são armazenados para evitar autenticações repetidas.
+#Configuração
 
-Coleta de Metadados de Vídeos:
+Para uma melhor experiencia recomendo instalar os pré requisitos usando um gerenciador de pacotes. Para essa instalação vamos usar o chocolatey.
 
-Antes de fazer o upload de qualquer vídeo, o script coleta metadados dos arquivos de vídeo em um diretório específico (por padrão, "downloads").
-Esta funcionalidade usa o ffprobe para coletar informações, como duração do vídeo.
+O Chocolatey é como uma "loja de aplicativos" para computadores Windows, mas em vez de clicar em botões para instalar programas, você usa comandos em um terminal (uma janela onde você digita comandos para o computador executar).
 
-Download e Upload de Mídias:
+Quando você quer instalar um programa no seu computador, normalmente você precisa:
 
-O script raspa mídias (fotos, áudios, vídeos) de um canal específico do Telegram.
-As mídias baixadas são então enviadas para outro canal ou grupo.
-Para evitar downloads repetidos, o script mantém um registro de todas as mídias baixadas anteriormente em um arquivo JSON.
-Suporte para Legendas:
+1 - Procurar o programa na internet.
+2 - Baixar o programa do site oficial.
+3 - Clicar no arquivo baixado para começar a instalação.
+3 - Seguir as instruções para instalar o programa.
 
-Se uma mídia no canal de origem tiver uma legenda (texto associado à mídia), essa legenda será preservada e enviada junto com a mídia para o canal de destino.
-Intervalo entre Transferências:
+Com o Chocolatey, você pode pular esses passos e simplesmente digitar um comando simples para instalar um programa.
 
-Para evitar limitações de taxa e garantir uma operação suave, o script espera 5 segundos entre o download e upload de cada mídia.
+Assim como explicado na [página de instalação](https://chocolatey.org/install) do chocolatey, abra o PowerShell do windows com privilégio de administrador e execute o comando abaixo:
 
+`Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
 
-Configuração
+Após a instalação do chocolatey você está pronto para preparar o ambiente para a instalção do 
+python e ffmpeg para isso no mesmo no mesmo terminal aberto cole o seguinte comando:
 
+'choco install git ffmpeg python --version 3.11.3 -y'
 
-Instale o Python
+e aguarde a instalação.
 
-Acesse o site python.org e baixe a versão estável mais nova recomendo a versão 3.11.3 (usada nos testes de desenvolvimento)
-Atualize as dependências
-Execute o arquivo update_libs.bat para atualizar as dependências
+#Baixando o script para a sua máquina e instalando as dependências
 
-Se aparecer uma mensagem falando sobre pip desatualizado, execute novamente o arquivo de update após executar o seguinte comando no terminal como administrador : python -m pip install --upgrade pip
+Com o git, python e ffmpeg instalados clone o repositorio do script para a sua máquina 
 
-Instale o ffmpeg
+para isso abra o prompt de comando do seu computador como administrador e redirecione para a area de trabalho com o seguinte comando:
 
-Instalando o FFmpeg no Windows: Um Guia Passo a Passo
+	'cd Desktop'
+	
+Após isso clone o repositorio do script:
 
-O FFmpeg é uma solução completa e multiplataforma para gravar, converter e transmitir áudio e vídeo. Ele é composto por várias bibliotecas e programas de linha de comando para manipular conteúdo multimídia. Neste guia, ensinaremos como instalar o FFmpeg no Windows.
+	'git clone https://github.com/viniped/tg_mirror.git'
+	
+Com isso será criado na sua Área de Trabalho uma pasta tg_mirror
 
-Passo 1: Baixar o FFmpeg
-Vá para o site oficial do FFmpeg: https://ffmpeg.org/download.html.
+Acesse ela pelo terminal com o comando: 
 
-Na seção "Windows", você encontrará links para builds do FFmpeg para Windows. Um dos lugares recomendados para baixar é o link "Windows builds gyan.dev". Clique nele.
+	'cd tg_mirror'
 
-Isso o redirecionará para uma página de download. Escolha a versão adequada para o seu sistema (32 ou 64 bits). Para a maioria dos sistemas modernos, você deve escolher a versão de 64 bits.
+Após isso vamos instalar as dependencias com o comando:
 
-Baixe o pacote "ffmpeg-git-essentials.7z"
+	'pip install -r requirements.txt --upgrade'
 
-Passo 2: Extrair os Arquivos
-Uma vez baixado, vá até o arquivo .zip e extraia-o. Você pode usar softwares como WinRAR ou 7-Zip
+# Usando o script 
 
-Extraia o arquivo para um local de fácil acesso. Para fins deste guia, vamos extrair para C:\.
+Após ter preparado o ambiente ao abrir a pasta do script você verá alguns arquivos porém somente 3 são interressantes para a sua utilizão na prática :
 
-Depois de extraído, você terá uma pasta chamada algo como "ffmpeg-xxxxxxxxx-essentials_build". Você pode renomeá-la para apenas "ffmpeg" para simplificar os próximos passos.
+	'exec_download_module.bat' : Executa o script que faz o download de todo o conteúdo de um canal seja protegido ou não.
 
-Passo 3: Adicionar FFmpeg ao PATH do Windows
+	'exec_forward_module.bat' : Executa o script que faz o encaminhamento de um canal para um canal só seu criando assim uma cópia particular	
 
-Pressione a tecla Windows + X e escolha "Sistema".
+	'exec_tg_mirror.bat' : Executa o script que baixa as mídias de um canal protegido e envia para um canal só seu.
+	
+#Suporte em caso de duvidas 
 
-No menu à esquerda, clique em "Configurações avançadas do sistema".
+Caso tenha alguma dúvida entre nesse grupo :
 
-Clique no botão "Variáveis de ambiente" na parte inferior da nova janela que aparece.
+	https://t.me/+uxnB4OwMYPhiNWMx
+	
+#Aviso Legal:
 
-Na seção "Variáveis de sistema", procure por uma variável chamada Path e clique em "Editar".
+O script TG_MIRROR é fornecido "como está" e sem garantias. É sua responsabilidade garantir que você tenha os direitos e permissões necessários para realizar as operações propostas. O autor do script não assume nenhuma responsabilidade por qualquer uso indevido ou danos causados pelo uso deste script.	 		
+		
+			
 
-Na janela que se abre, clique em "Novo" e adicione o caminho para o diretório bin do FFmpeg. Se você extraiu o FFmpeg em C:\ffmpeg, o caminho seria C:\ffmpeg\bin.
+ 
 
-Clique em "OK" para fechar todas as janelas.
-
-Passo 4: Verificar a Instalação
-Abra o Prompt de Comando (pressione a tecla Windows, digite "cmd" e pressione Enter).
-
-Digite ffmpeg -version e pressione Enter.
-
-Se tudo estiver configurado corretamente, você verá informações sobre a versão do FFmpeg.
-
-E pronto! Você instalou com sucesso o FFmpeg no seu sistema Windows e pode começar a usar seus recursos poderosos a partir do Prompt de Comando.
-
-
-Com chocolatey é mais gostoso !!!
-
-
-Você pode também instalar o ffmpeg via linha de comando, para isso siga o tutorial abaixo :
-
-
-Chocolatey é um gerenciador de pacotes para Windows, similar ao apt-get do Ubuntu. Ele permite que você instale aplicativos e ferramentas de linha de comando com um único comando
-
-Pórem aqui vamos abordar a instalação do python e ffmpeg
-
- 1. Instalando o Chocolatey
-
-1.1. Requisitos:
-
-- Windows 7+ / Windows Server 2003+
-- PowerShell v2+ (instalado por padrão em versões do Windows mais recentes)
-- .NET Framework 4+ (o instalador tentará instalar o .NET 4.0 se você não tiver)
-
-1.2. Processo de Instalação:
-
-1. Abra o PowerShell como **administrador**. Você pode fazer isso pesquisando por "PowerShell" no menu Iniciar, clicando com o botão direito no ícone do Windows PowerShell e selecionando "Executar como administrador".
-
-2. Copie e cole o seguinte comando no PowerShell e pressione Enter:
-
-
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-```
-
-3. Espere a instalação terminar. Após a instalação, feche o PowerShell.
-
-2. Instalando o Python e FFmpeg usando Chocolatey
-
-Após instalar o Chocolatey, instalar outros softwares se torna muito simples.
-
-2.1. Instalando o Python:
-
-1. Abra novamente o PowerShell como administrador.
-  
-2. Digite o seguinte comando para instalar o Python:
-
-
-choco install python --version 3.11.3 -y
-
-
-3. Aguarde a instalação terminar. O Python agora estará instalado e o comando `python` estará disponível no terminal.
-
-2.2. Instalando o FFmpeg:
-
-1. No mesmo PowerShell aberto como administrador, digite o seguinte comando para instalar o FFmpeg:
-
-
-choco install ffmpeg -y
-
-
-2. Aguarde a instalação terminar. O FFmpeg agora estará instalado e os comandos como `ffmpeg` e `ffprobe` estarão disponíveis no terminal.
-
-3. Confirmando a Instalação:
-
-Para confirmar que tudo foi instalado corretamente:
-
-1. No PowerShell (não precisa ser como administrador), digite:
-
-
-python --version
-
-Isto deve mostrar a versão do Python que você instalou.
-
-2. Ainda no PowerShell, digite:
-
-
-ffmpeg -version
-
-
-Isto deve mostrar a versão do FFmpeg que você instalou.
-
-E é isso! Você instalou com sucesso o Python e o FFmpeg no seu sistema Windows usando o Chocolatey. Agora você pode aproveitar essas ferramentas poderosas sem ter que passar por processos de instalação complicados manualmente.
-
-Você também pode aproveitar os recursos poderosos desse script no linux para isso use os comandos de instalação com sudo, para essa instalação vou abordar ubuntu e debian
-
-os comandos devem ser 
-
-sudo apt update --> atualizar a lista de pacotes do linux na máquina local 
-sudo apt install python3 --> instalar o python3
-
-Para instalar o gerenciador pip 
-
-sudo apt install python3-pip
-
-volto a repetir esse tutorial para linux serve apenas para ubuntu e debian 
-
-se você usa outra distro linux se informe como fazer para a sua distro
-
-
-Após preparar o ambiente você está pronto para usar esse poderoso script:
-
-1 - Antes de usar o script esteja de posse da sua api_hash e api_id você pode obtê-las no site : https://my.telegram.org/auth
-
-caso não souber pesquise a respeito 
-
-2 - Após isso instale a biblioteca pyrogram na sua máquina para isso abra o prompt de comando como administrador e digite 
-
-pip instal pyrogram
-
-no linux a instalação é realizada com pip3 install pyrogram
-
-3 - após isso execute o script para isso dentro da pasta onde você colocou o script na barra de caminho digite cmd e aperte enter 
-
-Atenção : Esse script não requer privilégios elevados para ser executado
-
-e digite o seguinte comando py tg_mirror.py 
-
-4 - Na sua primeira execução ele irá pedir suas credenciais api_id e api_hash obtidas anteriormente autentique e siga os passos seguintes
-
-5 Após autenticar o script pede para que você informe o @user_channel ou channel_id do canal que você quer copiar e o @user_channel ou channel_id do canal de destino. 
-
-Após clonar sugiro que voce salve o Json criado com o nome do canal que você clonou em uma pasta dentro do script para clonar novamente 
-
-Após ler esse tutorial e ainda tiver duvidas entre nesse grupo :
-
-https://t.me/+uxnB4OwMYPhiNWMx
-
-Esse script é disponibilizado como está e o desenvolvedor não se responsabiliza pelo mau uso do script 
