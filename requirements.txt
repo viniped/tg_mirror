@@ -3,4 +3,5 @@ tgcrypto
 pyfiglet
 colorama
 tqdm
-shutil
+pytest-shutil
+pyfiglet
