@@ -25,7 +25,7 @@ def get_cleaned_file_path(media, directory, chat_title, caption=None):
     else:
         base_name = media.file_name or f"{media.file_id}"
 
-    extension = media.file_name.split('.')[-1] if media.file_name and '.' in media.file_name
+    extension = media.file_name.split('.')[-1] if media.file_name and '.' in media.file_name else unknown
     clean_name = f"{base_name}.{extension}"
     
     # Aqui nós adicionamos o nome do canal ao caminho do diretório
