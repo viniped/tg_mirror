@@ -7,6 +7,9 @@ from tqdm import tqdm
 import re
 from utils import limpar_nome_arquivo, Banner, show_banner, cache_path, authenticate, rename_files
 
+import pyrogram
+pyrogram.utils.MIN_CHANNEL_ID = -1002999999999
+
 """ Global """
 session_name = "user"
 video_path = 'downloads' 

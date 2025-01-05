@@ -4,9 +4,13 @@ import json
 from pyrogram import Client
 from pathlib import Path
 import subprocess
+import pyrogram.utils
 from tqdm import tqdm
 from utils import Banner, show_banner, cache_path, authenticate
 import re
+import pyrogram
+
+pyrogram.utils.MIN_CHANNEL_ID = -1002999999999
 
 """ Global """
 session_name = "user"

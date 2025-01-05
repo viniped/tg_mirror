@@ -4,6 +4,9 @@ import json
 from pyrogram import Client
 from utils import Banner, show_banner, cache_path, authenticate
 
+import pyrogram
+pyrogram.utils.MIN_CHANNEL_ID = -1002999999999
+
 """ Global """
 session_name = "user"
 
